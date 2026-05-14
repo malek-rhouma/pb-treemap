@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PalletBiz Product Classification</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #F4F1EC;
+    --surface:   #FFFFFF;
+    --text:      #1C1B18;
+    --muted:     #6B6860;
+    --border:    #DEDAD3;
+    --accent:    #2C5F2E;
+    --accent2:   #3A5A7C;
+    --radius:    10px;
+    --font:      'DM Sans', sans-serif;
+    --mono:      'DM Mono', monospace;
+
+    /* material colors */
+    --wood:      #3D6B4F;
+    --metal:     #2E4E72;
+    --plastic:   #6B3D8A;
+    --cardboard: #8A5C1E;
+    --paper:     #7A4040;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 14px; }
+
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 13px; font-weight: 500;
+    color: #fff; letter-spacing: -0.5px;
+    flex-shrink: 0;
+  }
+
+  .header-title {
+    font-size: 15px; font-weight: 600;
+    letter-spacing: -0.2px; color: var(--text);
+  }
+  .header-subtitle { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+  .header-right {
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .stat-pill {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px; font-weight: 500;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .stat-pill span { color: var(--text); font-weight: 600; }
+
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 24px 24px;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--muted);
+    font-family: var(--mono);
+    min-height: 20px;
+  }
+  .bc-link {
+    color: var(--accent2); cursor: pointer;
+    text-decoration: none; font-weight: 500;
+    transition: color .15s;
+  }
+  .bc-link:hover { color: var(--text); }
+  .bc-sep { color: var(--border); font-size: 14px; }
+  .bc-current { color: var(--text); font-weight: 600; }
+
+  /* Legend */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 6px 14px;
+    font-size: 11px; color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0;
+  }
+
+  /* Treemap container */
+  #treemap-wrap {
+    flex: 1;
+    min-height: 420px;
+    max-height: 560px;
+    position: relative;
+  }
+
+  #treemap {
+    position: absolute; inset: 0;
+    overflow: hidden;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  .tile {
+    position: absolute;
+    box-sizing: border-box;
+    cursor: pointer;
+    overflow: hidden;
+    transition: filter .15s, transform .1s;
+    border: 2px solid rgba(255,255,255,0.18);
+  }
+  .tile:hover { filter: brightness(1.1); transform: scale(1.005); z-index: 2; }
+  .tile.leaf { cursor: default; }
+  .tile.leaf:hover { filter: none; transform: none; }
+
+  .tile-inner {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: flex-end;
+    padding: 8px 9px;
+    background: linear-gradient(to top, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.0) 55%);
+  }
+
+  .tile-name {
+    font-size: 12px; font-weight: 600;
+    color: #fff; line-height: 1.25;
+    word-break: break-word;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  .tile-meta {
+    font-size: 10px; color: rgba(255,255,255,0.7);
+    margin-top: 2px; font-family: var(--mono);
+  }
+
+  /* Hint bar */
+  .hint {
+    font-size: 11px; color: var(--muted);
+    text-align: center; padding: 4px 0 0;
+    font-family: var(--mono);
+    letter-spacing: 0.2px;
+  }
+
+  /* Tooltip */
+  #tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--text);
+    color: #fff;
+    border-radius: 7px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-family: var(--font);
+    max-width: 200px;
+    line-height: 1.5;
+    opacity: 0;
+    transition: opacity .15s;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  #tooltip.visible { opacity: 1; }
+  #tooltip strong { display: block; font-weight: 600; margin-bottom: 2px; }
+  #tooltip em { font-style: normal; color: rgba(255,255,255,0.6); font-family: var(--mono); font-size: 11px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-mark">PB</div>
+    <div>
+      <div class="header-title">Product Classification</div>
+      <div class="header-subtitle">Stage 1 — Material · Category · Product</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="stat-pill">Materials <span id="stat-mat">5</span></div>
+    <div class="stat-pill">Categories <span id="stat-cat">—</span></div>
+    <div class="stat-pill">Products <span id="stat-prod">69</span></div>
+  </div>
+</header>
+
+<main>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <div class="breadcrumb" id="breadcrumb"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div id="treemap-wrap">
+    <div id="treemap"></div>
+  </div>
+
+  <div class="hint" id="hint">Click a tile to explore · Click breadcrumb to go back</div>
+</main>
+
+<div id="tooltip"></div>
+
+<script>
+const PALETTE = {
+  Wood:      { base: '#3D6B4F', shades: ['#3D6B4F','#2F5540','#4E7E61','#5F9172','#6FA482','#3a6348','#2a4d3a','#4d7a5d','#5e8d6e'] },
+  Metal:     { base: '#2E4E72', shades: ['#2E4E72','#223D5E','#3A6085','#4B7298','#5B84A8','#2b4a6d','#1e3a57','#3a5d80','#4b6f91'] },
+  Plastic:   { base: '#6B3D8A', shades: ['#6B3D8A','#572E72','#7E4EA0','#9260B0','#A570BE','#673a85','#512c6d','#7b4b9d','#8f5eae'] },
+  Cardboard: { base: '#8A5C1E', shades: ['#8A5C1E','#714A14','#A06E28','#B48036','#C49248','#86581c','#6e4812','#9e6a25','#b27c32'] },
+  Paper:     { base: '#7A4040', shades: ['#7A4040','#623030','#904E4E','#A05E5E','#B06E6E','#763c3c','#5f2e2e','#8d4b4b','#9e5b5b'] },
+};
+
+const CAT_SHADE_IDX = {};
+
+const raw = [
+  ['Metal','Boxes','Foldable gitterbox'],['Metal','Boxes','Special gitterbox'],['Metal','Boxes','Special solid pallet container'],['Metal','Boxes','Standard gitterbox'],['Metal','Boxes','Standard solid pallet container'],
+  ['Wood','Boxes','OSB box'],['Wood','Boxes','Solid timber box'],['Wood','Boxes','Plywood box'],
+  ['Wood','Cradles','Special cradles'],['Wood','Cradles','Standard cradles'],
+  ['Wood','Crates','Double slatted crate'],['Wood','Crates','Hardboard crate'],['Wood','Crates','Industrial crate'],['Wood','Crates','Plywood crate'],['Wood','Crates','Runner crate'],['Wood','Crates','Slatted crate'],['Wood','Crates','Slip-lid crate'],
+  ['Wood','Dunnage','Special dunnage'],['Wood','Dunnage','Sticks'],
+  ['Wood','Handling accessories','1-board foldable collars'],['Wood','Handling accessories','2-board foldable collars'],['Wood','Handling accessories','Special foldable collars'],
+  ['Metal','Handling accessories','Distancers'],
+  ['Plastic','Handling accessories','Stacking protection'],
+  ['Wood','Handling accessories','Covers'],['Wood','Handling accessories','Lids'],
+  ['Cardboard','Packing accessories','Cardboard blank'],['Cardboard','Packing accessories','Cardboard box'],['Cardboard','Packing accessories','Cardboard lid'],['Cardboard','Packing accessories','Slip-lid cardboard box'],
+  ['Metal','Packing accessories','Strapping'],
+  ['Paper','Packing accessories','Packing bags'],['Paper','Packing accessories','Packing paper'],
+  ['Plastic','Packing accessories','Adhesive tape'],['Plastic','Packing accessories','Packing folie/film'],['Plastic','Packing accessories','Packing marking/identification'],['Plastic','Packing accessories','Packing protection/fillers'],['Plastic','Packing accessories','Special packing materials'],['Plastic','Packing accessories','Strapping'],
+  ['Wood','Packing accessories','Separators'],['Wood','Packing accessories','Wood wool'],
+  ['Metal','Pallets','Special steel pallet'],['Metal','Pallets','Standard steel pallet'],
+  ['Plastic','Pallets','Special plastic pallet'],['Plastic','Pallets','Standard plastic pallet'],
+  ['Wood','Pallets','Compressed pallet'],['Wood','Pallets','International standard pallet'],['Wood','Pallets','One-way pallet'],['Wood','Pallets','PalletBiz standard pallet'],['Wood','Pallets','Special (customer-specific) pallet'],
+  ['Metal','Production materials','Coil nails'],['Metal','Production materials','EPAL-approved nails'],['Metal','Production materials','Loose nails'],
+  ['Wood','Production materials','Chip boards'],['Wood','Production materials','Compressed blocks'],['Wood','Production materials','Fiber boards'],['Wood','Production materials','Hardwood boards'],['Wood','Production materials','HDF boards'],['Wood','Production materials','MDF boards'],['Wood','Production materials','Plywood boards'],['Wood','Production materials','Softwood beams'],['Wood','Production materials','Softwood boards'],['Wood','Production materials','Special timber elements'],
+  ['Metal','Racking products','Manual racking'],['Metal','Racking products','Mobilracks'],
+  ['Wood','Racking products','Racking platforms'],
+  ['Wood','Raw materials','Log prisms'],['Wood','Raw materials','Long logs'],['Wood','Raw materials','Short logs'],
+];
+
+// Build tree
+const tree = {};
+raw.forEach(([m, c, p]) => {
+  if (!tree[m]) tree[m] = {};
+  if (!tree[m][c]) tree[m][c] = [];
+  tree[m][c].push(p);
+});
+
+// Count cats
+const totalCats = new Set(raw.map(r => r[0]+'/'+r[1])).size;
+document.getElementById('stat-cat').textContent = totalCats;
+
+let state = { level: 0, material: null, category: null };
+
+// Simple squarify
+function squarify(items, x, y, w, h) {
+  if (!items.length) return [];
+  const total = items.reduce((s, i) => s + i.value, 0);
+  const rects = [];
+  let remaining = [...items];
+  let rx = x, ry = y, rw = w, rh = h;
+  while (remaining.length > 0) {
+    const rowArea = remaining.reduce((s, i) => s + i.value, 0);
+    const isWide = rw >= rh;
+    const rowLen = isWide ? rw : rh;
+    const rowThick = isWide ? rh : rw;
+    let row = [], rowSum = 0, bestRatio = Infinity;
+    for (let i = 0; i < remaining.length; i++) {
+      const candidate = [...row, remaining[i]];
+      const cSum = rowSum + remaining[i].value;
+      const rowFrac = cSum / rowArea;
+      const thick = rowThick * rowFrac;
+      let worst = 0;
+      candidate.forEach(item => {
+        const itemFrac = item.value / cSum;
+        const len = rowLen * itemFrac;
+        const r = isWide ? Math.max(thick / len, len / thick) : Math.max(len / thick, thick / len);
+        if (r > worst) worst = r;
+      });
+      if (worst <= bestRatio) { row = candidate; rowSum = cSum; bestRatio = worst; }
+      else break;
+    }
+    const thick = rowThick * (rowSum / rowArea);
+    let pos = isWide ? rx : ry;
+    row.forEach(item => {
+      const frac = item.value / rowSum;
+      const len = rowLen * frac;
+      rects.push(isWide
+        ? { ...item, x: pos, y: ry, w: len, h: thick }
+        : { ...item, x: rx, y: pos, w: thick, h: len });
+      pos += len;
+    });
+    if (isWide) { ry += thick; rh -= thick; }
+    else        { rx += thick; rw -= thick; }
+    remaining = remaining.filter(i => !row.includes(i));
+  }
+  return rects;
+}
+
+function getColor(material, catIndex) {
+  const p = PALETTE[material];
+  if (!p) return '#555';
+  return p.shades[catIndex % p.shades.length] || p.base;
+}
+
+function renderLegend() {
+  const leg = document.getElementById('legend');
+  if (state.level === 0) {
+    leg.innerHTML = Object.keys(tree).map(m =>
+      `<div class="legend-item"><div class="legend-dot" style="background:${PALETTE[m]?.base||'#555'}"></div><span>${m}</span></div>`
+    ).join('');
+  } else {
+    leg.innerHTML = '';
+  }
+}
+
+function render() {
+  const tm = document.getElementById('treemap');
+  const wrap = document.getElementById('treemap-wrap');
+  const W = wrap.offsetWidth;
+  const H = wrap.offsetHeight;
+  if (!W || !H) { requestAnimationFrame(render); return; }
+  tm.innerHTML = '';
+
+  const bc = document.getElementById('breadcrumb');
+  renderLegend();
+
+  if (state.level === 0) {
+    bc.innerHTML = '<span class="bc-current">All materials</span>';
+    const matCounts = {};
+    Object.entries(tree).forEach(([m, cats]) => {
+      matCounts[m] = Object.values(cats).reduce((s, arr) => s + arr.length, 0);
+    });
+    const items = Object.entries(matCounts).map(([k, v]) => ({ key: k, value: v }))
+      .sort((a, b) => b.value - a.value);
+    const rects = squarify(items, 0, 0, W, H);
+    rects.forEach(r => {
+      const color = PALETTE[r.key]?.base || '#555';
+      const catCount = Object.keys(tree[r.key]).length;
+      makeTile(tm, r, color, r.key,
+        `${r.value} products · ${catCount} categories`,
+        false,
+        () => { state = { level: 1, material: r.key, category: null }; render(); },
+        `Material: ${r.key}\n${r.value} products across ${catCount} categories`
+      );
+    });
+
+  } else if (state.level === 1) {
+    const m = state.material;
+    bc.innerHTML = `<span class="bc-link" id="bc0">All materials</span><span class="bc-sep">›</span><span class="bc-current">${m}</span>`;
+    document.getElementById('bc0').onclick = () => { state = { level: 0 }; render(); };
+
+    const cats = tree[m];
+    const items = Object.entries(cats)
+      .map(([k, v]) => ({ key: k, value: v.length }))
+      .sort((a, b) => b.value - a.value);
+    const rects = squarify(items, 0, 0, W, H);
+    rects.forEach((r, idx) => {
+      const color = getColor(m, idx + 1);
+      makeTile(tm, r, color, r.key,
+        `${r.value} product${r.value > 1 ? 's' : ''}`,
+        false,
+        () => { state = { level: 2, material: m, category: r.key }; render(); },
+        `Category: ${r.key}\nMaterial: ${m}\n${r.value} products`
+      );
+    });
+
+  } else if (state.level === 2) {
+    const m = state.material, c = state.category;
+    bc.innerHTML = `<span class="bc-link" id="bc0">All materials</span><span class="bc-sep">›</span><span class="bc-link" id="bc1">${m}</span><span class="bc-sep">›</span><span class="bc-current">${c}</span>`;
+    document.getElementById('bc0').onclick = () => { state = { level: 0 }; render(); };
+    document.getElementById('bc1').onclick = () => { state = { level: 1, material: m }; render(); };
+    document.getElementById('hint').textContent = 'Click a breadcrumb to navigate back';
+
+    const prods = tree[m][c];
+    const items = prods.map(p => ({ key: p, value: 1 }));
+    const rects = squarify(items, 0, 0, W, H);
+    const cats = Object.keys(tree[m]);
+    const catIdx = cats.indexOf(c);
+    rects.forEach((r, idx) => {
+      const color = getColor(m, catIdx + 1 + idx * 0.3 | 0);
+      makeTile(tm, r, color, r.key, `${m} · ${c}`, true, null,
+        `Product: ${r.key}\nCategory: ${c}\nMaterial: ${m}`);
+    });
+  }
+
+  if (state.level < 2) {
+    document.getElementById('hint').textContent = 'Click a tile to explore · Click breadcrumb to go back';
+  }
+}
+
+function makeTile(parent, r, color, name, meta, isLeaf, onClick, tooltipText) {
+  const d = document.createElement('div');
+  d.className = 'tile' + (isLeaf ? ' leaf' : '');
+  d.style.cssText = `left:${r.x}px;top:${r.y}px;width:${Math.max(r.w-1,2)}px;height:${Math.max(r.h-1,2)}px;background:${color};`;
+  d.innerHTML = `<div class="tile-inner">
+    <div class="tile-name">${r.w > 60 && r.h > 40 ? name : ''}</div>
+    ${r.w > 80 && r.h > 55 ? `<div class="tile-meta">${meta}</div>` : ''}
+  </div>`;
+  if (onClick) d.addEventListener('click', onClick);
+
+  // Tooltip
+  const tip = document.getElementById('tooltip');
+  d.addEventListener('mouseenter', e => {
+    tip.innerHTML = tooltipText.split('\n').map((l, i) =>
+      i === 0 ? `<strong>${l}</strong>` : `<em>${l}</em>`
+    ).join('');
+    tip.classList.add('visible');
+  });
+  d.addEventListener('mousemove', e => {
+    const x = e.clientX + 14, y = e.clientY + 14;
+    tip.style.left = Math.min(x, window.innerWidth - 220) + 'px';
+    tip.style.top = Math.min(y, window.innerHeight - 80) + 'px';
+  });
+  d.addEventListener('mouseleave', () => tip.classList.remove('visible'));
+
+  parent.appendChild(d);
+}
+
+// Initial render + resize
+window.addEventListener('resize', () => { render(); });
+render();
+</script>
+</body>
+</html>

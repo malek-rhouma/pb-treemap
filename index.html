@@ -19,13 +19,6 @@
     --radius:    10px;
     --font:      'DM Sans', sans-serif;
     --mono:      'DM Mono', monospace;
-
-    /* material colors */
-    --wood:      #3D6B4F;
-    --metal:     #2E4E72;
-    --plastic:   #6B3D8A;
-    --cardboard: #8A5C1E;
-    --paper:     #7A4040;
   }
 
   body {
@@ -92,7 +85,6 @@
     min-height: 0;
   }
 
-  /* Breadcrumb */
   .breadcrumb {
     display: flex; align-items: center; gap: 6px;
     font-size: 12px; color: var(--muted);
@@ -108,7 +100,6 @@
   .bc-sep { color: var(--border); font-size: 14px; }
   .bc-current { color: var(--text); font-weight: 600; }
 
-  /* Legend */
   .legend {
     display: flex; flex-wrap: wrap; gap: 6px 14px;
     font-size: 11px; color: var(--muted);
@@ -118,7 +109,6 @@
     width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0;
   }
 
-  /* Treemap container */
   #treemap-wrap {
     flex: 1;
     min-height: 420px;
@@ -164,7 +154,6 @@
     margin-top: 2px; font-family: var(--mono);
   }
 
-  /* Hint bar */
   .hint {
     font-size: 11px; color: var(--muted);
     text-align: center; padding: 4px 0 0;
@@ -172,7 +161,6 @@
     letter-spacing: 0.2px;
   }
 
-  /* Tooltip */
   #tooltip {
     position: fixed;
     pointer-events: none;
@@ -182,7 +170,7 @@
     padding: 8px 12px;
     font-size: 12px;
     font-family: var(--font);
-    max-width: 200px;
+    max-width: 220px;
     line-height: 1.5;
     opacity: 0;
     transition: opacity .15s;
@@ -207,7 +195,7 @@
   <div class="header-right">
     <div class="stat-pill">Materials <span id="stat-mat">5</span></div>
     <div class="stat-pill">Categories <span id="stat-cat">—</span></div>
-    <div class="stat-pill">Products <span id="stat-prod">69</span></div>
+    <div class="stat-pill">Products <span id="stat-prod">64</span></div>
   </div>
 </header>
 
@@ -235,31 +223,71 @@ const PALETTE = {
   Paper:     { base: '#7A4040', shades: ['#7A4040','#623030','#904E4E','#A05E5E','#B06E6E','#763c3c','#5f2e2e','#8d4b4b','#9e5b5b'] },
 };
 
-const CAT_SHADE_IDX = {};
-
 const raw = [
-  ['Metal','Boxes','Foldable gitterbox'],['Metal','Boxes','Special gitterbox'],['Metal','Boxes','Special solid pallet container'],['Metal','Boxes','Standard gitterbox'],['Metal','Boxes','Standard solid pallet container'],
-  ['Wood','Boxes','OSB box'],['Wood','Boxes','Solid timber box'],['Wood','Boxes','Plywood box'],
-  ['Wood','Cradles','Special cradles'],['Wood','Cradles','Standard cradles'],
-  ['Wood','Crates','Double slatted crate'],['Wood','Crates','Hardboard crate'],['Wood','Crates','Industrial crate'],['Wood','Crates','Plywood crate'],['Wood','Crates','Runner crate'],['Wood','Crates','Slatted crate'],['Wood','Crates','Slip-lid crate'],
-  ['Wood','Dunnage','Special dunnage'],['Wood','Dunnage','Sticks'],
-  ['Wood','Handling accessories','1-board foldable collars'],['Wood','Handling accessories','2-board foldable collars'],['Wood','Handling accessories','Special foldable collars'],
-  ['Metal','Handling accessories','Distancers'],
-  ['Plastic','Handling accessories','Stacking protection'],
-  ['Wood','Handling accessories','Covers'],['Wood','Handling accessories','Lids'],
-  ['Cardboard','Packing accessories','Cardboard blank'],['Cardboard','Packing accessories','Cardboard box'],['Cardboard','Packing accessories','Cardboard lid'],['Cardboard','Packing accessories','Slip-lid cardboard box'],
-  ['Metal','Packing accessories','Strapping'],
-  ['Paper','Packing accessories','Packing bags'],['Paper','Packing accessories','Packing paper'],
-  ['Plastic','Packing accessories','Adhesive tape'],['Plastic','Packing accessories','Packing folie/film'],['Plastic','Packing accessories','Packing marking/identification'],['Plastic','Packing accessories','Packing protection/fillers'],['Plastic','Packing accessories','Special packing materials'],['Plastic','Packing accessories','Strapping'],
-  ['Wood','Packing accessories','Separators'],['Wood','Packing accessories','Wood wool'],
-  ['Metal','Pallets','Special steel pallet'],['Metal','Pallets','Standard steel pallet'],
-  ['Plastic','Pallets','Special plastic pallet'],['Plastic','Pallets','Standard plastic pallet'],
-  ['Wood','Pallets','Compressed pallet'],['Wood','Pallets','International standard pallet'],['Wood','Pallets','One-way pallet'],['Wood','Pallets','PalletBiz standard pallet'],['Wood','Pallets','Special (customer-specific) pallet'],
-  ['Metal','Production materials','Coil nails'],['Metal','Production materials','EPAL-approved nails'],['Metal','Production materials','Loose nails'],
-  ['Wood','Production materials','Chip boards'],['Wood','Production materials','Compressed blocks'],['Wood','Production materials','Fiber boards'],['Wood','Production materials','Hardwood boards'],['Wood','Production materials','HDF boards'],['Wood','Production materials','MDF boards'],['Wood','Production materials','Plywood boards'],['Wood','Production materials','Softwood beams'],['Wood','Production materials','Softwood boards'],['Wood','Production materials','Special timber elements'],
-  ['Metal','Racking products','Manual racking'],['Metal','Racking products','Mobilracks'],
+  ['Cardboard','Packing accessories','Cardboard blanks'],
+  ['Cardboard','Packing accessories','Cardboard boxes'],
+  ['Cardboard','Packing accessories','Cardboard lids'],
+  ['Cardboard','Packing accessories','Slip-lid cardboard boxes'],
+  ['Metal','Handling / Pallet accessories','Distancers'],
+  ['Metal','Load carriers','Foldable gitterboxes'],
+  ['Metal','Load carriers','Solid pallet boxes'],
+  ['Metal','Packing accessories','Straps'],
+  ['Metal','Pallets','Steel pallets'],
+  ['Metal','Production materials','EPAL nails'],
+  ['Metal','Production materials','Loose nails'],
+  ['Metal','Production materials','Standard nails'],
+  ['Metal','Racking products','Manual racking'],
+  ['Metal','Racking products','Mobilracks'],
+  ['Paper','Packing accessories','Packing bags'],
+  ['Paper','Packing accessories','Packing paper'],
+  ['Plastic','Handling / Pallet accessories','Stacking protection'],
+  ['Plastic','Packing accessories','Adhesive tape'],
+  ['Plastic','Packing accessories','Flexible packaging (e.g., packing folie, film)'],
+  ['Plastic','Packing accessories','Packing marking/identification'],
+  ['Plastic','Packing accessories','Packing protection/fillers'],
+  ['Plastic','Packing accessories','Special packing materials'],
+  ['Plastic','Packing accessories','Strapping'],
+  ['Plastic','Pallets','Plastic pallets'],
+  ['Wood','Boxes','Chipboard boxes'],
+  ['Wood','Boxes','LVL boxes'],
+  ['Wood','Boxes','MDF boxes'],
+  ['Wood','Boxes','OSB boxes'],
+  ['Wood','Boxes','Plywood boxes'],
+  ['Wood','Boxes','Solid timber boxes'],
+  ['Wood','Cradles','Cradles'],
+  ['Wood','Crates','HDF crates'],
+  ['Wood','Crates','Plywood crates'],
+  ['Wood','Crates','Runner crates'],
+  ['Wood','Crates','Slatted crates'],
+  ['Wood','Dunnage','Dunnage'],
+  ['Wood','Handling / Pallet accessories','Covers'],
+  ['Wood','Handling / Pallet accessories','Foldable collars'],
+  ['Wood','Handling / Pallet accessories','Lids'],
+  ['Wood','Packing accessories','Separators'],
+  ['Wood','Packing accessories','Wood wool'],
+  ['Wood','Packing accessories','Wooden wedges'],
+  ['Wood','Pallets','Compressed pallets'],
+  ['Wood','Pallets','International standard pallets'],
+  ['Wood','Pallets','PalletBiz standard pallets'],
+  ['Wood','Pallets','Special pallets'],
+  ['Wood','Production materials','Block wood'],
+  ['Wood','Production materials','Chipboards'],
+  ['Wood','Production materials','Compressed blocks'],
+  ['Wood','Production materials','Cut-to-size pallet elements'],
+  ['Wood','Production materials','Fiber boards'],
+  ['Wood','Production materials','HDF boards'],
+  ['Wood','Production materials','Hardwood boards'],
+  ['Wood','Production materials','LVL boards'],
+  ['Wood','Production materials','Long-length pallet elements'],
+  ['Wood','Production materials','MDF boards'],
+  ['Wood','Production materials','OSB boards'],
+  ['Wood','Production materials','PSL boards'],
+  ['Wood','Production materials','Plywood boards'],
+  ['Wood','Production materials','Special timber elements'],
   ['Wood','Racking products','Racking platforms'],
-  ['Wood','Raw materials','Log prisms'],['Wood','Raw materials','Long logs'],['Wood','Raw materials','Short logs'],
+  ['Wood','Raw materials','Log prisms'],
+  ['Wood','Raw materials','Long logs'],
+  ['Wood','Raw materials','Short logs'],
 ];
 
 // Build tree
@@ -267,7 +295,7 @@ const tree = {};
 raw.forEach(([m, c, p]) => {
   if (!tree[m]) tree[m] = {};
   if (!tree[m][c]) tree[m][c] = [];
-  tree[m][c].push(p);
+  if (!tree[m][c].includes(p)) tree[m][c].push(p);
 });
 
 // Count cats
@@ -276,7 +304,6 @@ document.getElementById('stat-cat').textContent = totalCats;
 
 let state = { level: 0, material: null, category: null };
 
-// Simple squarify
 function squarify(items, x, y, w, h) {
   if (!items.length) return [];
   const total = items.reduce((s, i) => s + i.value, 0);
@@ -402,7 +429,7 @@ function render() {
     const cats = Object.keys(tree[m]);
     const catIdx = cats.indexOf(c);
     rects.forEach((r, idx) => {
-      const color = getColor(m, catIdx + 1 + idx * 0.3 | 0);
+      const color = getColor(m, catIdx + 1 + (idx * 0.3 | 0));
       makeTile(tm, r, color, r.key, `${m} · ${c}`, true, null,
         `Product: ${r.key}\nCategory: ${c}\nMaterial: ${m}`);
     });
@@ -423,7 +450,6 @@ function makeTile(parent, r, color, name, meta, isLeaf, onClick, tooltipText) {
   </div>`;
   if (onClick) d.addEventListener('click', onClick);
 
-  // Tooltip
   const tip = document.getElementById('tooltip');
   d.addEventListener('mouseenter', e => {
     tip.innerHTML = tooltipText.split('\n').map((l, i) =>
@@ -433,7 +459,7 @@ function makeTile(parent, r, color, name, meta, isLeaf, onClick, tooltipText) {
   });
   d.addEventListener('mousemove', e => {
     const x = e.clientX + 14, y = e.clientY + 14;
-    tip.style.left = Math.min(x, window.innerWidth - 220) + 'px';
+    tip.style.left = Math.min(x, window.innerWidth - 240) + 'px';
     tip.style.top = Math.min(y, window.innerHeight - 80) + 'px';
   });
   d.addEventListener('mouseleave', () => tip.classList.remove('visible'));
@@ -441,7 +467,6 @@ function makeTile(parent, r, color, name, meta, isLeaf, onClick, tooltipText) {
   parent.appendChild(d);
 }
 
-// Initial render + resize
 window.addEventListener('resize', () => { render(); });
 render();
 </script>

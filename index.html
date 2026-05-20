@@ -389,7 +389,7 @@ function render() {
       const color = PALETTE[r.key]?.base || '#555';
       const catCount = Object.keys(tree[r.key]).length;
       makeTile(tm, r, color, r.key,
-        `${r.value} products · ${catCount} categories`,
+        `${r.value} products | ${catCount} categories`,
         false,
         () => { state = { level: 1, material: r.key, category: null }; render(); },
         `Material: ${r.key}\n${r.value} products across ${catCount} categories`

@@ -1,0 +1,233 @@
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F1EC;--surface:#FFFFFF;--text:#1C1B18;--muted:#6B6860;
+  --border:#DEDAD3;--accent:#2C5F2E;--accent2:#3A5A7C;
+  --radius:10px;--font:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',monospace;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1a1916;--surface:#232220;--text:#EDEAE4;--muted:#9B9890;--border:#3A3834}
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);padding:16px;min-height:100vh}
+h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+.search-wrap{position:relative;margin-bottom:16px}
+.search-wrap input{
+  width:100%;padding:10px 40px 10px 38px;
+  font-family:var(--font);font-size:14px;
+  background:var(--surface);color:var(--text);
+  border:1px solid var(--border);border-radius:var(--radius);
+  outline:none;transition:border-color .15s;
+}
+.search-wrap input:focus{border-color:var(--accent)}
+.search-wrap input::placeholder{color:var(--muted)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;pointer-events:none}
+.clear-btn{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--muted);
+  font-size:16px;padding:2px;display:none;line-height:1;
+}
+.clear-btn:hover{color:var(--text)}
+
+.results-meta{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:10px;min-height:16px}
+
+.list{display:flex;flex-direction:column;gap:6px}
+
+.product-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:11px 14px;
+  display:flex;align-items:center;gap:12px;
+  transition:border-color .15s, box-shadow .15s;
+  cursor:default;
+}
+.product-card:hover{border-color:var(--accent2);box-shadow:0 1px 6px rgba(0,0,0,0.06)}
+
+.mat-badge{
+  flex-shrink:0;width:8px;height:8px;border-radius:2px;margin-top:1px;
+}
+
+.card-body{flex:1;min-width:0}
+.card-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-name mark{background:rgba(44,95,46,0.15);color:var(--text);border-radius:2px;padding:0 1px}
+
+.card-path{
+  display:flex;align-items:center;gap:5px;margin-top:3px;
+  font-size:11px;color:var(--muted);font-family:var(--mono);
+  flex-wrap:wrap;
+}
+.card-path .pill{
+  padding:2px 7px;border-radius:20px;
+  font-size:10px;font-weight:500;letter-spacing:0.2px;
+}
+.card-path .sep{color:var(--border);font-size:12px}
+
+.empty{
+  text-align:center;padding:40px 16px;
+  font-size:13px;color:var(--muted);
+}
+.empty i{font-size:32px;display:block;margin-bottom:8px;opacity:.4}
+</style>
+
+<h2 class="sr-only">PalletBiz product classification lookup — search for a product to see its material and category</h2>
+
+<div class="search-wrap">
+  <i class="ti ti-search search-icon" aria-hidden="true"></i>
+  <input type="text" id="q" placeholder="Search products, categories, or materials…" autocomplete="off" autofocus>
+  <button class="clear-btn" id="clear-btn" aria-label="Clear search"><i class="ti ti-x" aria-hidden="true"></i></button>
+</div>
+
+<div class="results-meta" id="meta"></div>
+<div class="list" id="list" role="list"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" onerror=""></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script>
+const PALETTE={
+  Wood:    {base:'#3D6B4F',light:'rgba(61,107,79,0.12)',text:'#2F5540'},
+  Metal:   {base:'#2E4E72',light:'rgba(46,78,114,0.12)',text:'#223D5E'},
+  Plastic: {base:'#6B3D8A',light:'rgba(107,61,138,0.12)',text:'#572E72'},
+  Cardboard:{base:'#8A5C1E',light:'rgba(138,92,30,0.12)',text:'#714A14'},
+  Paper:   {base:'#7A4040',light:'rgba(122,64,64,0.12)',text:'#623030'},
+};
+
+const raw=[
+  ['Cardboard','Packing accessories','Cardboard blanks'],
+  ['Cardboard','Packing accessories','Cardboard boxes'],
+  ['Cardboard','Packing accessories','Cardboard lids'],
+  ['Cardboard','Packing accessories','Slip-lid cardboard boxes'],
+  ['Metal','Handling / Pallet accessories','Distancers'],
+  ['Metal','Load carriers','Foldable gitterboxes'],
+  ['Metal','Load carriers','Solid pallet boxes'],
+  ['Metal','Packing accessories','Straps'],
+  ['Metal','Pallets','Steel pallets'],
+  ['Metal','Production materials','EPAL nails'],
+  ['Metal','Production materials','Loose nails'],
+  ['Metal','Production materials','Standard nails'],
+  ['Metal','Racking products','Manual racking'],
+  ['Metal','Racking products','Mobilracks'],
+  ['Paper','Packing accessories','Packing bags'],
+  ['Paper','Packing accessories','Packing paper'],
+  ['Plastic','Handling / Pallet accessories','Stacking protection'],
+  ['Plastic','Packing accessories','Adhesive tape'],
+  ['Plastic','Packing accessories','Flexible packaging (e.g., packing folie, film)'],
+  ['Plastic','Packing accessories','Packing marking/identification'],
+  ['Plastic','Packing accessories','Packing protection/fillers'],
+  ['Plastic','Packing accessories','Special packing materials'],
+  ['Plastic','Packing accessories','Strapping'],
+  ['Plastic','Pallets','Plastic pallets'],
+  ['Wood','Boxes','Chipboard boxes'],
+  ['Wood','Boxes','LVL boxes'],
+  ['Wood','Boxes','MDF boxes'],
+  ['Wood','Boxes','OSB boxes'],
+  ['Wood','Boxes','Plywood boxes'],
+  ['Wood','Boxes','Solid timber boxes'],
+  ['Wood','Cradles','Cradles'],
+  ['Wood','Crates','HDF crates'],
+  ['Wood','Crates','Plywood crates'],
+  ['Wood','Crates','Runner crates'],
+  ['Wood','Crates','Slatted crates'],
+  ['Wood','Dunnage','Dunnage'],
+  ['Wood','Handling / Pallet accessories','Covers'],
+  ['Wood','Handling / Pallet accessories','Foldable collars'],
+  ['Wood','Handling / Pallet accessories','Lids'],
+  ['Wood','Packing accessories','Separators'],
+  ['Wood','Packing accessories','Wood wool'],
+  ['Wood','Packing accessories','Wooden wedges'],
+  ['Wood','Pallets','Compressed pallets'],
+  ['Wood','Pallets','International standard pallets'],
+  ['Wood','Pallets','PalletBiz standard pallets'],
+  ['Wood','Pallets','Special pallets'],
+  ['Wood','Production materials','Block wood'],
+  ['Wood','Production materials','Chipboards'],
+  ['Wood','Production materials','Compressed blocks'],
+  ['Wood','Production materials','Cut-to-size pallet elements'],
+  ['Wood','Production materials','Fiber boards'],
+  ['Wood','Production materials','HDF boards'],
+  ['Wood','Production materials','Hardwood boards'],
+  ['Wood','Production materials','LVL boards'],
+  ['Wood','Production materials','Long-length pallet elements'],
+  ['Wood','Production materials','MDF boards'],
+  ['Wood','Production materials','OSB boards'],
+  ['Wood','Production materials','PSL boards'],
+  ['Wood','Production materials','Plywood boards'],
+  ['Wood','Production materials','Special timber elements'],
+  ['Wood','Racking products','Racking platforms'],
+  ['Wood','Raw materials','Log prisms'],
+  ['Wood','Raw materials','Long logs'],
+  ['Wood','Raw materials','Short logs'],
+];
+
+function highlight(text, q){
+  if(!q) return text;
+  const idx=text.toLowerCase().indexOf(q.toLowerCase());
+  if(idx<0) return text;
+  return text.slice(0,idx)+'<mark>'+text.slice(idx,idx+q.length)+'</mark>'+text.slice(idx+q.length);
+}
+
+function renderCard(row, q){
+  const [mat,cat,prod]=row;
+  const p=PALETTE[mat]||{base:'#888',light:'rgba(136,136,136,.12)',text:'#555'};
+  const div=document.createElement('div');
+  div.className='product-card';
+  div.setAttribute('role','listitem');
+  div.innerHTML=`
+    <div class="mat-badge" style="background:${p.base}" title="${mat}"></div>
+    <div class="card-body">
+      <div class="card-name">${highlight(prod,q)}</div>
+      <div class="card-path">
+        <span class="pill" style="background:${p.light};color:${p.text}">${highlight(mat,q)}</span>
+        <span class="sep">›</span>
+        <span style="color:var(--muted)">${highlight(cat,q)}</span>
+      </div>
+    </div>`;
+  return div;
+}
+
+function update(){
+  const q=document.getElementById('q').value.trim();
+  const list=document.getElementById('list');
+  const meta=document.getElementById('meta');
+  document.getElementById('clear-btn').style.display=q?'block':'none';
+  list.innerHTML='';
+
+  if(!q){
+    meta.textContent='';
+    const empty=document.createElement('div');
+    empty.className='empty';
+    empty.innerHTML='<i class="ti ti-search" aria-hidden="true"></i>Start typing to find a product and see its classification';
+    list.appendChild(empty);
+    return;
+  }
+
+  const ql=q.toLowerCase();
+  const matches=raw.filter(([m,c,p])=>
+    p.toLowerCase().includes(ql)||
+    c.toLowerCase().includes(ql)||
+    m.toLowerCase().includes(ql)
+  );
+
+  if(!matches.length){
+    meta.textContent='No results';
+    const empty=document.createElement('div');
+    empty.className='empty';
+    empty.innerHTML='<i class="ti ti-mood-sad" aria-hidden="true"></i>No products match "'+q+'"';
+    list.appendChild(empty);
+    return;
+  }
+
+  meta.textContent=matches.length+' result'+(matches.length>1?'s':'');
+  matches.forEach(row=>list.appendChild(renderCard(row,q)));
+}
+
+document.getElementById('q').addEventListener('input',update);
+document.getElementById('clear-btn').addEventListener('click',()=>{
+  document.getElementById('q').value='';
+  update();
+  document.getElementById('q').focus();
+});
+
+update();
+</script>
